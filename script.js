@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (calledNumbers.length === 90) {
             resetGame();
         }
+
+        // Call the first number immediately when starting
+        callNumber();
     }
 
     function callNumber() {
