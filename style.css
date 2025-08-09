@@ -3,13 +3,17 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f0f0f0;
     margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 #game-container {
     text-align: center;
+    width: 100%;
+    max-width: 600px;
 }
 
 #header {
@@ -31,13 +35,15 @@ body {
 
 #board {
     display: grid;
-    grid-template-columns: repeat(10, 50px);
-    gap: 5px;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .circle {
-    width: 50px;
-    height: 50px;
+    aspect-ratio: 1;
     border-radius: 50%;
     background-color: #ddd;
     display: flex;
@@ -45,6 +51,7 @@ body {
     align-items: center;
     font-size: 1.2em;
     font-weight: bold;
+    min-height: 35px;
 }
 
 .called {
@@ -54,4 +61,52 @@ body {
 
 .hidden {
     display: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+    }
+    
+    #game-container {
+        width: 100%;
+    }
+    
+    #board {
+        gap: 2px;
+        max-width: 100%;
+    }
+    
+    .circle {
+        min-height: 30px;
+        font-size: 0.9em;
+    }
+    
+    #startButton, #nextNumberButton {
+        padding: 8px 16px;
+        font-size: 1em;
+    }
+    
+    #called-number-display {
+        font-size: 1.5em;
+    }
+}
+
+@media (max-width: 480px) {
+    .circle {
+        min-height: 25px;
+        font-size: 0.8em;
+    }
+    
+    #board {
+        gap: 1px;
+    }
+}
+
+@media (max-width: 360px) {
+    .circle {
+        min-height: 22px;
+        font-size: 0.7em;
+    }
 }
