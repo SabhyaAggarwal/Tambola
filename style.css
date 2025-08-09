@@ -17,10 +17,11 @@ body {
     height: 50px;
 }
 
-#startButton {
+#startButton, #nextNumberButton {
     padding: 10px 20px;
     font-size: 1.2em;
     cursor: pointer;
+    margin: 5px;
 }
 
 #called-number-display {

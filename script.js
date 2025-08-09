@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     const board = document.getElementById('board');
     const startButton = document.getElementById('startButton');
+    const nextNumberButton = document.getElementById('nextNumberButton');
     const calledNumberDisplay = document.getElementById('called-number-display');
 
     let numbers = Array.from({ length: 90 }, (_, i) => i + 1);
     let calledNumbers = [];
-    let gameInterval;
 
     // Create the board
     for (let i = 1; i <= 90; i++) {
@@ -17,22 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     startButton.addEventListener('click', startGame);
+    nextNumberButton.addEventListener('click', callNumber);
 
     function startGame() {
         startButton.classList.add('hidden');
+        nextNumberButton.classList.remove('hidden');
         calledNumberDisplay.classList.remove('hidden');
 
         // Reset board for subsequent games
         if (calledNumbers.length === 90) {
             resetGame();
         }
-
-        gameInterval = setInterval(callNumber, 2000); // Call a new number every 2 seconds
     }
 
     function callNumber() {
         if (numbers.length === 0) {
-            clearInterval(gameInterval);
+            nextNumberButton.classList.add('hidden');
             calledNumberDisplay.textContent = 'Finished!';
             const restartButton = document.createElement('button');
             restartButton.textContent = 'Want to start again?';
@@ -70,8 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
         circles.forEach(c => c.classList.remove('called'));
         calledNumberDisplay.textContent = '';
         calledNumberDisplay.classList.add('hidden');
+        nextNumberButton.classList.add('hidden');
         startButton.classList.remove('hidden');
-        const restartButton = document.querySelector('#header button:not(#startButton)');
+        const restartButton = document.querySelector('#header button:not(#startButton):not(#nextNumberButton)');
         if (restartButton) {
             restartButton.remove();
         }
