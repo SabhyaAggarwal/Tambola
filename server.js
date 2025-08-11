@@ -8,20 +8,67 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: function (origin, callback) {
+            // Allow requests with no origin (like mobile apps, Postman, etc.)
+            if (!origin) return callback(null, true);
+            
+            // Allow GitHub Pages domains
+            if (origin.includes('.github.io') || 
+                origin.includes('localhost') || 
+                origin.includes('127.0.0.1')) {
+                return callback(null, true);
+            }
+            
+            // Default allow all for development
+            return callback(null, true);
+        },
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        // Allow GitHub Pages domains
+        if (origin.includes('.github.io') || 
+            origin.includes('localhost') || 
+            origin.includes('127.0.0.1')) {
+            return callback(null, true);
+        }
+        
+        // Default allow all for development
+        return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 app.use(express.json());
-app.use(express.static('.'));
 
 // In-memory storage for rooms (in production, use a database)
 const rooms = new Map();
 
 // API Routes
+
+// Health check endpoint
+app.get('/', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        message: 'Tambola Backend Server',
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        message: 'Tambola Backend Server',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Get room data
 app.get('/api/rooms/:roomName', (req, res) => {

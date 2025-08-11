@@ -43,35 +43,54 @@ let ruleToClaim = null;
 let numbers = [];
 let calledNumbers = [];
 let socket = null;
+let API_BASE_URL = '';
+
+// Initialize configuration
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.TambolaConfig) {
+        API_BASE_URL = window.TambolaConfig.getApiUrl();
+        console.log('API Base URL:', API_BASE_URL);
+    }
+});
 
 // Initialize Socket.IO connection
 if (typeof io !== 'undefined') {
-    socket = io();
-    
-    // Socket event listeners
-    socket.on('connect', () => {
-        console.log('Connected to server');
-    });
-    
-    socket.on('number-called', (data) => {
-        calledNumbers = data.calledNumbers;
-        updateBoard();
-        calledNumberDisplay.textContent = data.number;
-    });
-    
-    socket.on('game-reset', (roomData) => {
-        calledNumbers = roomData.calledNumbers;
-        updateBoard();
-        renderRules(roomData);
-        calledNumberDisplay.textContent = '';
-    });
-    
-    socket.on('rule-claimed', (data) => {
-        renderRules(data.room);
-    });
-    
-    socket.on('room-state', (roomData) => {
-        loadGameStateFromServer(roomData);
+    // Wait for config to be loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.TambolaConfig) {
+            const socketUrl = window.TambolaConfig.getSocketUrl();
+            socket = io(socketUrl);
+            console.log('Connecting to Socket.IO at:', socketUrl);
+        } else {
+            // Fallback to default
+            socket = io();
+        
+            // Socket event listeners
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+            
+            socket.on('number-called', (data) => {
+                calledNumbers = data.calledNumbers;
+                updateBoard();
+                calledNumberDisplay.textContent = data.number;
+            });
+            
+            socket.on('game-reset', (roomData) => {
+                calledNumbers = roomData.calledNumbers;
+                updateBoard();
+                renderRules(roomData);
+                calledNumberDisplay.textContent = '';
+            });
+            
+            socket.on('rule-claimed', (data) => {
+                renderRules(data.room);
+            });
+            
+            socket.on('room-state', (roomData) => {
+                loadGameStateFromServer(roomData);
+            });
+        }
     });
 }
 
@@ -169,7 +188,7 @@ function updateBoard() {
 function loadGameState() {
     if (!currentRoom) return;
     
-    fetch(`/api/rooms/${currentRoom}`)
+    fetch(`${API_BASE_URL}/api/rooms/${currentRoom}`)
         .then(response => response.json())
         .then(roomData => {
             loadGameStateFromServer(roomData);
@@ -192,7 +211,7 @@ function loadGameStateFromServer(roomData) {
 function resetBoard() {
     if (!currentRoom) return;
     
-    fetch(`/api/rooms/${currentRoom}/reset`, {
+    fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/reset`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -238,7 +257,7 @@ function createRoom() {
         rules: rules
     };
     
-    fetch('/api/rooms', {
+    fetch(`${API_BASE_URL}/api/rooms`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -283,7 +302,7 @@ function joinRoom() {
         return;
     }
     
-    fetch(`/api/rooms/${roomName}/join`, {
+    fetch(`${API_BASE_URL}/api/rooms/${roomName}/join`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -352,7 +371,7 @@ function callNumber() {
     const randomIndex = Math.floor(Math.random() * numbers.length);
     const number = numbers[randomIndex];
     
-    fetch(`/api/rooms/${currentRoom}/call-number`, {
+    fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/call-number`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -423,7 +442,7 @@ verifyButton.style.display = 'none';
 approveClaimButton.addEventListener('click', () => {
     const winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
     if (winnerName && winnerName.trim()) {
-        fetch(`/api/rooms/${currentRoom}/claim`, {
+        fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/claim`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

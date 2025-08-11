@@ -1,29 +1,43 @@
 # Tambola/Housie Cross-Platform Game
 
-A real-time multiplayer Tambola/Housie game with cross-platform join ability.
+A real-time multiplayer Tambola/Housie game with separated frontend and backend architecture for easy deployment.
+
+## Architecture
+
+This game uses a **separated architecture**:
+- **Frontend**: Deployed on GitHub Pages (static files)
+- **Backend**: Deployed on Render (Node.js API + Socket.IO)
+- **Communication**: Cross-origin requests with CORS configuration
 
 ## Features
 
 - **Cross-platform gameplay**: Players can create and join rooms from different devices
-- **Real-time synchronization**: All players see number calls and game updates instantly
+- **Real-time synchronization**: All players see number calls and game updates instantly  
 - **Room-based multiplayer**: Create private rooms with custom rules
 - **Rule management**: Set up custom winning conditions (Full House, First Line, etc.)
 - **Role-based permissions**: Only room creators can call numbers and approve claims
+- **Cloud deployment ready**: Frontend on GitHub Pages, Backend on Render
 
 ## Quick Start
+
+### Local Development
 
 1. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Start the server:**
+2. **Start the backend server:**
    ```bash
    npm start
    ```
 
 3. **Access the game:**
    Open `http://localhost:3000` in your browser
+
+### Production Usage
+
+Visit the deployed frontend at your GitHub Pages URL. The frontend automatically connects to the backend deployed on Render.
 
 ## How to Play
 
@@ -67,9 +81,11 @@ A real-time multiplayer Tambola/Housie game with cross-platform join ability.
 
 ## Deployment
 
-### Deploy to Render
+This application uses a **separated deployment architecture**:
 
-The easiest way to deploy this game is using [Render](https://render.com), which offers free hosting for Node.js applications.
+### Backend Deployment (Render)
+
+Deploy the backend API and Socket.IO server to Render:
 
 #### Automatic Deployment (Recommended)
 
@@ -81,7 +97,7 @@ The easiest way to deploy this game is using [Render](https://render.com), which
    - Connect your GitHub account and select your forked repository
 
 3. **Configure the service:**
-   - **Name**: `tambola-game` (or any name you prefer)
+   - **Name**: `tambola-backend` (or any name you prefer)
    - **Environment**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
@@ -89,38 +105,84 @@ The easiest way to deploy this game is using [Render](https://render.com), which
 
 4. **Deploy:**
    - Click "Create Web Service"
-   - Render will automatically build and deploy your app
-   - Your game will be available at `https://your-app-name.onrender.com`
+   - Render will automatically build and deploy your backend
+   - Your backend will be available at `https://your-app-name.onrender.com`
 
-#### Manual Deployment
+5. **Note your backend URL** - you'll need it for frontend configuration
 
-1. **Upload your code** to a Git repository (GitHub, GitLab, etc.)
+### Frontend Deployment (GitHub Pages)
 
-2. **Use the render.yaml file**: This repository includes a `render.yaml` file for automatic configuration
+Deploy the frontend to GitHub Pages:
 
-3. **Connect and deploy** following the steps above
+#### Automatic Deployment
 
-#### Environment Variables
+1. **Update Backend URL:**
+   - Edit `config.js` in your forked repository
+   - Replace `'https://tambola-backend.onrender.com'` with your actual Render backend URL
 
-For production deployment, you may want to set:
-- `NODE_ENV=production`
+2. **Enable GitHub Pages:**
+   - Go to your repository on GitHub
+   - Click Settings → Pages
+   - Select "Deploy from a branch"
+   - Choose "main" branch and "/ (root)" folder
+   - Click Save
+
+3. **Access your game:**
+   - Your frontend will be available at `https://yourusername.github.io/Tambola`
+   - The frontend automatically connects to your Render backend
+
+#### Alternative: GitHub Actions (Included)
+
+This repository includes a GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) that automatically:
+- Builds and deploys frontend files to GitHub Pages
+- Excludes backend-specific files
+- Triggers on every push to main branch
+
+### Configuration
+
+#### Backend URL Configuration
+
+Update the backend URL in `config.js`:
+
+```javascript
+// Replace with your actual Render backend URL
+if (window.location.hostname.includes('github.io')) {
+    return 'https://your-tambola-backend.onrender.com';
+}
+```
+
+#### Environment Variables (Backend)
+
+For production deployment on Render:
+- `NODE_ENV=production` (automatically set)
 - `PORT` (automatically set by Render)
 
-#### Important Notes
+### Testing Cross-Platform Deployment
+
+1. **Deploy backend** to Render and note the URL
+2. **Update config.js** with your backend URL
+3. **Deploy frontend** to GitHub Pages
+4. **Test functionality**:
+   - Create room from one device/browser
+   - Join from another device using your GitHub Pages URL
+   - Verify real-time communication works across platforms
+
+### Alternative Deployment Options
+
+#### Backend Alternatives to Render
+- **Heroku**: Use included `package.json` scripts
+- **Railway**: Auto-deploys from GitHub
+- **DigitalOcean App Platform**: Node.js support
+- **Vercel**: Serverless functions (requires modifications)
+
+#### Frontend Alternatives to GitHub Pages
+- **Netlify**: Drag-and-drop deployment
+- **Vercel**: Git-based deployment
+- **Surge.sh**: Simple static hosting
+
+### Important Notes
 
 - **Free tier limitations**: Render's free tier may spin down after inactivity
-- **Persistent storage**: Current implementation uses in-memory storage, which resets on deployment
-- **For production**: Consider upgrading to a paid plan and using a database (Redis/MongoDB) for persistence
-
-### Other Deployment Options
-
-- **Heroku**: Similar process, use the included `package.json` scripts
-- **Railway**: Auto-deploys from GitHub with minimal configuration  
-- **DigitalOcean App Platform**: Supports Node.js apps with simple setup
-- **Vercel**: Good for serverless deployment (may require modifications)
-
-### Post-Deployment
-
-1. **Share your game URL** with players
-2. **Test cross-platform functionality** by accessing from different devices
-3. **Monitor usage** through your hosting platform's dashboard
+- **CORS configuration**: Backend is configured to accept requests from `.github.io` domains
+- **In-memory storage**: Current implementation resets data on backend restarts
+- **For production**: Consider using Redis/MongoDB for persistent storage
