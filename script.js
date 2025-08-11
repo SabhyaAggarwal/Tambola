@@ -64,8 +64,10 @@ if (typeof io !== 'undefined') {
         } else {
             // Fallback to default
             socket = io();
+        }
         
-            // Socket event listeners
+        // Socket event listeners - always attach regardless of config
+        if (socket) {
             socket.on('connect', () => {
                 console.log('Connected to server');
             });
