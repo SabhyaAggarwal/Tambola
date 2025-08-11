@@ -37,16 +37,8 @@
                 <button id="next-step-1-button">Next</button>
             </div>
 
-            <!-- Step 2: Second Person's Info -->
+            <!-- Step 2: Rule Making (formerly Step 3) -->
             <div id="start-step-2" class="hidden">
-                <h2>Pass the phone to someone else</h2>
-                <input type="text" id="second-person-name-input" placeholder="Enter your name">
-                <input type="password" id="second-person-password-input" placeholder="Enter a secret password">
-                <button id="next-step-2-button">Next</button>
-            </div>
-
-            <!-- Step 3: Rule Making -->
-            <div id="start-step-3" class="hidden">
                 <h2>Set Up Rules</h2>
                 <label class="switch">
                     <input type="checkbox" id="money-switch">
@@ -84,17 +76,11 @@
     <div id="claim-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <div id="claim-step-1">
-                <h2 id="claim-pass-prompt"></h2>
-                <input type="password" id="claim-password-input" placeholder="Enter secret password">
-                <button id="claim-submit-password-button">Verify</button>
-            </div>
-            <div id="claim-step-2" class="hidden">
+            <div id="claim-view">
                 <div id="circles-container"></div>
                 <h2 id="claim-winner-prompt"></h2>
                 <button id="approve-claim-button">Approve</button>
                 <button id="bogey-claim-button">Bogey</button>
-                <button id="hide-circles-button">Hide Circles</button>
             </div>
         </div>
     </div>

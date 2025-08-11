@@ -76,17 +76,18 @@ function togglePriceInputs() {
 }
 
 function handleClaimClick(event) {
-    const ruleName = event.target.dataset.ruleName;
-    ruleToClaim = ruleName;
+    ruleToClaim = event.target.dataset.ruleName;
+
     if (!isCreator) {
-        alert(`You have initiated a claim for "${ruleName}". Please go to the creator's device to complete the verification.`);
+        alert(`You have initiated a claim for "${ruleToClaim}". Please go to the creator's device to complete the verification.`);
         return;
     }
-    const roomData = JSON.parse(localStorage.getItem(currentRoom));
-    claimPassPrompt.textContent = `Pass the phone to ${roomData.secondPersonName}`;
-    claimPasswordInput.value = '';
-    claimStep1.classList.remove('hidden');
-    claimStep2.classList.add('hidden');
+
+    // Creator's simplified flow
+    claimWinnerPrompt.textContent = `Verify claim for: ${ruleToClaim}`;
+    approveClaimButton.disabled = false;
+    bogeyClaimButton.disabled = false;
+    showCircles();
     claimModal.classList.remove('hidden');
 }
 
@@ -172,9 +173,7 @@ function createRoom() {
         return;
     }
     const roomData = {
-        isCreator: true,
-        secondPersonName: secondPersonNameInput.value.trim(),
-        secondPersonPassword: secondPersonPasswordInput.value.trim(),
+        isCreator: true, // This flag helps differentiate creator's view/actions
         moneyEnabled: moneySwitch.checked,
         rules: rules,
         calledNumbers: []
@@ -207,7 +206,6 @@ function joinRoom() {
 
 function showCircles() {
     circlesContainer.innerHTML = '';
-    hideCirclesButton.classList.remove('hidden');
     for (let i = 0; i < 5; i++) {
         const circle = document.createElement('div');
         circle.classList.add('circle');
@@ -279,14 +277,6 @@ nextStep1Button.addEventListener('click', () => {
     }
 });
 
-nextStep2Button.addEventListener('click', () => {
-    if (secondPersonNameInput.value.trim() && secondPersonPasswordInput.value.trim()) {
-        startStep2.classList.add('hidden');
-        startStep3.classList.remove('hidden');
-    } else {
-        alert("Please enter the second person's name and password.");
-    }
-});
 
 addRuleButton.addEventListener('click', addRuleEditor);
 createRoomFinalizeButton.addEventListener('click', createRoom);
@@ -303,26 +293,6 @@ window.addEventListener('storage', (event) => {
     }
 });
 
-claimSubmitPasswordButton.addEventListener('click', () => {
-    const roomData = JSON.parse(localStorage.getItem(currentRoom));
-    if (claimPasswordInput.value === roomData.secondPersonPassword) {
-        claimStep1.classList.add('hidden');
-        claimStep2.classList.remove('hidden');
-        approveClaimButton.disabled = true;
-        bogeyClaimButton.disabled = true;
-        claimWinnerPrompt.textContent = `Verify claim for: ${ruleToClaim}`;
-        showCircles();
-    } else {
-        alert('Incorrect secret password!');
-    }
-});
-
-hideCirclesButton.addEventListener('click', () => {
-    circlesContainer.innerHTML = '';
-    approveClaimButton.disabled = false;
-    bogeyClaimButton.disabled = false;
-    hideCirclesButton.classList.add('hidden');
-});
 
 approveClaimButton.addEventListener('click', () => {
     const winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
