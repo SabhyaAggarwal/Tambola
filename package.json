@@ -1,0 +1,19 @@
+{
+  "name": "tambola",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["tambola", "housie", "bingo", "game"],
+  "author": "",
+  "license": "ISC",
+  "description": "Cross-platform Tambola/Housie game with real-time multiplayer support",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  }
+}
