@@ -40,6 +40,7 @@ const bogeyClaimButton = document.getElementById('bogey-claim-button');
 let currentRoom = null;
 let isCreator = false;
 let ruleToClaim = null;
+let claimingPlayerName = null; // Store the name of the player making the claim
 let numbers = [];
 let calledNumbers = [];
 let socket = null;
@@ -64,8 +65,10 @@ if (typeof io !== 'undefined') {
         } else {
             // Fallback to default
             socket = io();
+        }
         
-            // Socket event listeners
+        // Socket event listeners - always attach regardless of config
+        if (socket) {
             socket.on('connect', () => {
                 console.log('Connected to server');
             });
@@ -89,6 +92,20 @@ if (typeof io !== 'undefined') {
             
             socket.on('room-state', (roomData) => {
                 loadGameStateFromServer(roomData);
+            });
+            
+            socket.on('claim-request-received', (data) => {
+                // Only show the modal for creators
+                if (isCreator) {
+                    const { ruleName, playerName } = data;
+                    ruleToClaim = ruleName;
+                    claimingPlayerName = playerName; // Store the player name
+                    claimWinnerPrompt.textContent = `${playerName} wants to claim: ${ruleName}`;
+                    approveClaimButton.disabled = false;
+                    bogeyClaimButton.disabled = false;
+                    showCircles();
+                    claimModal.classList.remove('hidden');
+                }
             });
         }
     });
@@ -128,11 +145,27 @@ function handleClaimClick(event) {
     ruleToClaim = event.target.dataset.ruleName;
 
     if (!isCreator) {
-        alert(`You have initiated a claim for "${ruleToClaim}". Please go to the creator's device to complete the verification.`);
+        const playerName = prompt("Enter your name to claim this rule:");
+        if (!playerName || !playerName.trim()) {
+            alert("Name is required to make a claim.");
+            return;
+        }
+        
+        // Emit socket event to notify creator
+        if (socket && currentRoom) {
+            socket.emit('claim-request', {
+                roomName: currentRoom,
+                ruleName: ruleToClaim,
+                playerName: playerName.trim()
+            });
+        }
+        
+        alert(`You have initiated a claim for "${ruleToClaim}". The creator will be notified to verify your claim.`);
         return;
     }
 
     // Creator's simplified flow
+    claimingPlayerName = null; // Clear any previous claiming player name
     claimWinnerPrompt.textContent = `Verify claim for: ${ruleToClaim}`;
     approveClaimButton.disabled = false;
     bogeyClaimButton.disabled = false;
@@ -417,6 +450,8 @@ closeButtons.forEach(button => {
         startGameModal.classList.add('hidden');
         joinGameModal.classList.add('hidden');
         claimModal.classList.add('hidden');
+        // Clear claiming player name when modal is closed
+        claimingPlayerName = null;
     });
 });
 
@@ -440,7 +475,14 @@ verifyButton.style.display = 'none';
 
 
 approveClaimButton.addEventListener('click', () => {
-    const winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
+    // Use the stored claiming player name or prompt if not available
+    let winnerName = claimingPlayerName;
+    if (!winnerName) {
+        winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
+    } else {
+        // Show confirmation with the auto-populated name
+        winnerName = prompt(`Approving claim for "${ruleToClaim}".\nWinner's name:`, claimingPlayerName);
+    }
     if (winnerName && winnerName.trim()) {
         fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/claim`, {
             method: 'PUT',
