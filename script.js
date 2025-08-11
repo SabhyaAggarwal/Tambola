@@ -296,6 +296,13 @@ nextNumberButton.addEventListener('click', callNumber);
 resetButton.addEventListener('click', resetGame);
 verifyButton.style.display = 'none';
 
+window.addEventListener('storage', (event) => {
+    if (event.key === currentRoom) {
+        console.log("Storage changed for current room. Reloading state.");
+        loadGameState();
+    }
+});
+
 claimSubmitPasswordButton.addEventListener('click', () => {
     const roomData = JSON.parse(localStorage.getItem(currentRoom));
     if (claimPasswordInput.value === roomData.secondPersonPassword) {
