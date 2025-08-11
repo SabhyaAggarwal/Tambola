@@ -48,10 +48,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve static files
+app.use(express.static(path.join(__dirname)));
+
 // In-memory storage for rooms (in production, use a database)
 const rooms = new Map();
 
 // API Routes
+
+// Serve the main game page
+app.get('/game', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -212,6 +220,20 @@ io.on('connection', (socket) => {
     socket.on('leave-room', (roomName) => {
         socket.leave(roomName);
         console.log(`User ${socket.id} left room ${roomName}`);
+    });
+    
+    // Handle claim requests from non-creators
+    socket.on('claim-request', (data) => {
+        const { roomName, ruleName, playerName } = data;
+        console.log(`Claim request for ${ruleName} in room ${roomName} from player ${playerName}`);
+        
+        // Broadcast the claim request to all clients in the room
+        // The creator client will handle showing the verification modal
+        io.to(roomName).emit('claim-request-received', {
+            ruleName,
+            playerName,
+            roomName
+        });
     });
     
     // Handle disconnection
