@@ -1,6 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Game Area Elements
-    const board = document.getElementById('board');
+// Game Area Elements
+const board = document.getElementById('board');
     const initialOptions = document.getElementById('initial-options');
     const gameArea = document.getElementById('game-area');
     const nextNumberButton = document.getElementById('nextNumberButton');
@@ -367,4 +366,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hide the board initially
     board.style.display = 'none';
-});
