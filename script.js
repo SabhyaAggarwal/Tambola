@@ -42,6 +42,57 @@ let isCreator = false;
 let ruleToClaim = null;
 let numbers = [];
 let calledNumbers = [];
+let socket = null;
+let API_BASE_URL = '';
+
+// Initialize configuration
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.TambolaConfig) {
+        API_BASE_URL = window.TambolaConfig.getApiUrl();
+        console.log('API Base URL:', API_BASE_URL);
+    }
+});
+
+// Initialize Socket.IO connection
+if (typeof io !== 'undefined') {
+    // Wait for config to be loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.TambolaConfig) {
+            const socketUrl = window.TambolaConfig.getSocketUrl();
+            socket = io(socketUrl);
+            console.log('Connecting to Socket.IO at:', socketUrl);
+        } else {
+            // Fallback to default
+            socket = io();
+        
+            // Socket event listeners
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+            
+            socket.on('number-called', (data) => {
+                calledNumbers = data.calledNumbers;
+                updateBoard();
+                calledNumberDisplay.textContent = data.number;
+            });
+            
+            socket.on('game-reset', (roomData) => {
+                calledNumbers = roomData.calledNumbers;
+                updateBoard();
+                renderRules(roomData);
+                calledNumberDisplay.textContent = '';
+            });
+            
+            socket.on('rule-claimed', (data) => {
+                renderRules(data.room);
+            });
+            
+            socket.on('room-state', (roomData) => {
+                loadGameStateFromServer(roomData);
+            });
+        }
+    });
+}
 
 // --- Function Definitions ---
 function addRuleEditor() {
@@ -89,15 +140,20 @@ function handleClaimClick(event) {
     claimModal.classList.remove('hidden');
 }
 
-function renderRules() {
+function renderRules(roomData = null) {
     rulesArea.innerHTML = '';
-    const roomData = JSON.parse(localStorage.getItem(currentRoom));
-    if (!roomData || !roomData.rules) return;
-    roomData.rules.forEach(rule => {
+    
+    // If roomData is provided, use it; otherwise fetch from current room state
+    const rules = roomData ? roomData.rules : [];
+    const moneyEnabled = roomData ? roomData.moneyEnabled : false;
+    
+    if (!rules || rules.length === 0) return;
+    
+    rules.forEach(rule => {
         const ruleDiv = document.createElement('div');
         ruleDiv.classList.add('rule-display');
         let ruleText = rule.name;
-        if (roomData.moneyEnabled) {
+        if (moneyEnabled) {
             ruleText += ` - $${rule.price}`;
         }
         if (rule.claimedBy) {
@@ -130,34 +186,58 @@ function updateBoard() {
 }
 
 function loadGameState() {
-    const roomData = JSON.parse(localStorage.getItem(currentRoom));
-    calledNumbers = roomData.calledNumbers;
+    if (!currentRoom) return;
+    
+    fetch(`${API_BASE_URL}/api/rooms/${currentRoom}`)
+        .then(response => response.json())
+        .then(roomData => {
+            loadGameStateFromServer(roomData);
+        })
+        .catch(error => {
+            console.error('Error loading game state:', error);
+        });
+}
+
+function loadGameStateFromServer(roomData) {
+    calledNumbers = roomData.calledNumbers || [];
     numbers = Array.from({ length: 90 }, (_, i) => i + 1).filter(n => !calledNumbers.includes(n));
     updateBoard();
-    renderRules();
+    renderRules(roomData);
     if (calledNumbers.length > 0) {
         calledNumberDisplay.textContent = calledNumbers[calledNumbers.length - 1];
     }
 }
 
 function resetBoard() {
-    calledNumbers = [];
-    numbers = Array.from({ length: 90 }, (_, i) => i + 1);
-    const roomData = JSON.parse(localStorage.getItem(currentRoom));
-    if (roomData) {
-        roomData.calledNumbers = [];
-        localStorage.setItem(currentRoom, JSON.stringify(roomData));
-    }
-    updateBoard();
-    calledNumberDisplay.textContent = '';
+    if (!currentRoom) return;
+    
+    fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/reset`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(roomData => {
+        calledNumbers = [];
+        numbers = Array.from({ length: 90 }, (_, i) => i + 1);
+        updateBoard();
+        renderRules(roomData);
+        calledNumberDisplay.textContent = '';
+    })
+    .catch(error => {
+        console.error('Error resetting game:', error);
+        alert('Error resetting game. Please try again.');
+    });
 }
 
 function createRoom() {
     const roomName = roomNameInput.value.trim();
-    if (localStorage.getItem(roomName)) {
-        alert('Room with this name already exists!');
+    if (!roomName) {
+        alert('Please enter a room name.');
         return;
     }
+    
     const rules = [];
     const ruleEditors = document.querySelectorAll('.rule-editor');
     for (const editor of ruleEditors) {
@@ -170,46 +250,112 @@ function createRoom() {
         alert('Please add at least one rule.');
         return;
     }
+    
     const roomData = {
-        isCreator: true, // This flag helps differentiate creator's view/actions
+        roomName: roomName,
         moneyEnabled: moneySwitch.checked,
-        rules: rules,
-        calledNumbers: []
+        rules: rules
     };
-    localStorage.setItem(roomName, JSON.stringify(roomData));
-    currentRoom = roomName;
-    isCreator = true;
-    startGameModal.classList.add('hidden');
-    initialOptions.classList.add('hidden');
-    gameArea.classList.remove('hidden');
-    roomInfo.textContent = `Room: ${currentRoom}`;
-    resetBoard();
-    renderRules();
+    
+    fetch(`${API_BASE_URL}/api/rooms`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(roomData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(responseData => {
+        currentRoom = roomName;
+        isCreator = true;
+        startGameModal.classList.add('hidden');
+        initialOptions.classList.add('hidden');
+        gameArea.classList.remove('hidden');
+        roomInfo.textContent = `Room: ${currentRoom}`;
+        
+        // Join the socket room
+        if (socket) {
+            socket.emit('join-room', currentRoom);
+        }
+        
+        // Initialize game state
+        calledNumbers = [];
+        numbers = Array.from({ length: 90 }, (_, i) => i + 1);
+        updateBoard();
+        renderRules(responseData);
+    })
+    .catch(error => {
+        console.error('Error creating room:', error);
+        alert(error.error || 'Error creating room. Please try again.');
+    });
 }
 
 function joinRoom() {
     const roomName = joinRoomNameInput.value.trim();
-    if (roomName && localStorage.getItem(roomName)) {
+    if (!roomName) {
+        alert('Please enter a room name.');
+        return;
+    }
+    
+    fetch(`${API_BASE_URL}/api/rooms/${roomName}/join`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(roomData => {
         currentRoom = roomName;
         isCreator = false;
         joinGameModal.classList.add('hidden');
         initialOptions.classList.add('hidden');
         gameArea.classList.remove('hidden');
         roomInfo.textContent = `Room: ${currentRoom}`;
-        loadGameState();
-    } else {
-        alert('Room not found!');
-    }
+        
+        // Join the socket room
+        if (socket) {
+            socket.emit('join-room', currentRoom);
+        }
+        
+        loadGameStateFromServer(roomData);
+    })
+    .catch(error => {
+        console.error('Error joining room:', error);
+        alert(error.error || 'Room not found!');
+    });
 }
 
 function showCircles() {
     circlesContainer.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-        const circle = document.createElement('div');
-        circle.classList.add('circle');
-        circle.style.animationDelay = `${i * 0.2}s`;
-        circlesContainer.appendChild(circle);
+    
+    // Create verification board with 90 numbers in 10x9 grid
+    const verificationBoard = document.createElement('div');
+    verificationBoard.classList.add('verification-board');
+    
+    for (let i = 1; i <= 90; i++) {
+        const numberCell = document.createElement('div');
+        numberCell.classList.add('verification-number-cell');
+        numberCell.textContent = i;
+        
+        // Highlight called numbers
+        if (calledNumbers.includes(i)) {
+            numberCell.classList.add('verification-called');
+        }
+        
+        verificationBoard.appendChild(numberCell);
     }
+    
+    circlesContainer.appendChild(verificationBoard);
 }
 
 function callNumber() {
@@ -221,15 +367,26 @@ function callNumber() {
         calledNumberDisplay.textContent = 'Finished!';
         return;
     }
+    
     const randomIndex = Math.floor(Math.random() * numbers.length);
     const number = numbers[randomIndex];
-    numbers.splice(randomIndex, 1);
-    calledNumbers.push(number);
-    const roomData = JSON.parse(localStorage.getItem(currentRoom));
-    roomData.calledNumbers = calledNumbers;
-    localStorage.setItem(currentRoom, JSON.stringify(roomData));
-    updateBoard();
-    calledNumberDisplay.textContent = number;
+    
+    fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/call-number`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ number })
+    })
+    .then(response => response.json())
+    .then(roomData => {
+        // The socket event will handle updating the UI
+        numbers.splice(randomIndex, 1);
+    })
+    .catch(error => {
+        console.error('Error calling number:', error);
+        alert('Error calling number. Please try again.');
+    });
 }
 
 function resetGame() {
@@ -281,25 +438,30 @@ nextNumberButton.addEventListener('click', callNumber);
 resetButton.addEventListener('click', resetGame);
 verifyButton.style.display = 'none';
 
-window.addEventListener('storage', (event) => {
-    if (event.key === currentRoom) {
-        console.log("Storage changed for current room. Reloading state.");
-        loadGameState();
-    }
-});
-
 
 approveClaimButton.addEventListener('click', () => {
     const winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
     if (winnerName && winnerName.trim()) {
-        const roomData = JSON.parse(localStorage.getItem(currentRoom));
-        const rule = roomData.rules.find(r => r.name === ruleToClaim);
-        if (rule) {
-            rule.claimedBy = winnerName.trim();
-            localStorage.setItem(currentRoom, JSON.stringify(roomData));
-            renderRules();
+        fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/claim`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ruleName: ruleToClaim,
+                winnerName: winnerName.trim(),
+                approved: true
+            })
+        })
+        .then(response => response.json())
+        .then(roomData => {
             claimModal.classList.add('hidden');
-        }
+            // The socket event will handle updating the UI
+        })
+        .catch(error => {
+            console.error('Error approving claim:', error);
+            alert('Error approving claim. Please try again.');
+        });
     } else {
         alert("Winner's name cannot be empty.");
     }

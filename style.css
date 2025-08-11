@@ -90,6 +90,12 @@ body {
     text-align: center;
 }
 
+/* Wider modal for claim verification */
+#claim-modal .modal-content {
+    max-width: 600px;
+    margin: 5% auto;
+}
+
 .close-button {
     color: #aaa;
     float: right;
@@ -141,6 +147,19 @@ input[type="text"], input[type="password"] {
     #called-number-display {
         font-size: 1.5em;
     }
+    
+    /* Verification board responsive */
+    .verification-board {
+        max-width: 100%;
+        gap: 1px;
+        padding: 5px;
+    }
+    
+    #claim-modal .modal-content {
+        width: 95%;
+        margin: 2% auto;
+        padding: 15px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -151,6 +170,12 @@ input[type="text"], input[type="password"] {
     
     #board {
         gap: 1px;
+    }
+    
+    /* Verification board for small screens */
+    .verification-number-cell {
+        min-height: 20px;
+        font-size: 0.7em;
     }
 }
 
@@ -273,15 +298,44 @@ input:checked + .slider:before {
     cursor: pointer;
 }
 
-/* Claim Modal Circles */
+/* Claim Modal Verification Board */
 #circles-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100px;
     margin: 20px 0;
 }
 
+.verification-board {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    padding: 8px;
+    background-color: #fff;
+}
+
+.verification-number-cell {
+    aspect-ratio: 1;
+    background-color: #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9em;
+    font-weight: bold;
+    min-height: 25px;
+    border-radius: 3px;
+}
+
+.verification-called {
+    background-color: #ffcc00;
+    color: #333;
+}
+
+/* Keep old circle styles for any fallback */
 .circle {
     width: 20px;
     height: 20px;
