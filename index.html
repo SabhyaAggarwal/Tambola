@@ -8,13 +8,83 @@
 </head>
 <body>
     <div id="game-container">
-        <div id="header">
-            <button id="startButton">Start</button>
-            <button id="nextNumberButton" class="hidden">Next Number</button>
-            <div id="called-number-display" class="hidden"></div>
+        <div id="initial-options">
+            <button id="start-game-button">Start a Game</button>
+            <button id="join-game-button">Join a Game</button>
         </div>
-        <div id="board"></div>
+
+        <div id="game-area" class="hidden">
+            <div id="header">
+                <div id="room-info"></div>
+                <button id="nextNumberButton">Next Number</button>
+                <div id="called-number-display"></div>
+                <button id="verify-button">Verify</button> <!-- UI kept, functionality to be changed -->
+                <button id="reset-button">Reset</button>
+            </div>
+            <div id="board"></div>
+            <div id="rules-area"></div>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- Modal for starting a new game (now multi-step) -->
+    <div id="start-game-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <!-- Step 1: Room Name -->
+            <div id="start-step-1">
+                <h2>Start a New Game</h2>
+                <input type="text" id="room-name-input" placeholder="Enter Room Name">
+                <button id="next-step-1-button">Next</button>
+            </div>
+
+            <!-- Step 2: Rule Making (formerly Step 3) -->
+            <div id="start-step-2" class="hidden">
+                <h2>Set Up Rules</h2>
+                <label class="switch">
+                    <input type="checkbox" id="money-switch">
+                    <span class="slider round"></span>
+                </label>
+                <label for="money-switch">Game involves money</label>
+                <div id="rules-list-editor"></div>
+                <button id="add-rule-button">Add Rule</button>
+                <button id="create-room-finalize-button">Create Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for joining a game -->
+    <div id="join-game-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Join a Game</h2>
+            <input type="text" id="join-room-name-input" placeholder="Enter Room Name">
+            <button id="join-room-button">Join Room</button>
+        </div>
+    </div>
+
+    <!-- Modal for verification -->
+    <div id="verify-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Verification</h2>
+            <input type="password" id="verify-password-input" placeholder="Enter Password">
+            <button id="submit-verification-button">Submit</button>
+        </div>
+    </div>
+
+    <!-- Modal for claiming a rule -->
+    <div id="claim-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="claim-view">
+                <div id="circles-container"></div>
+                <h2 id="claim-winner-prompt"></h2>
+                <button id="approve-claim-button">Approve</button>
+                <button id="bogey-claim-button">Bogey</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
 </body>
 </html>
