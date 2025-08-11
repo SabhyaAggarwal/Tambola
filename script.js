@@ -15,28 +15,26 @@ const startGameButton = document.getElementById('start-game-button');
 const joinGameButton = document.getElementById('join-game-button');
 const joinRoomButton = document.getElementById('join-room-button');
 const closeButtons = document.querySelectorAll('.close-button');
+
+// Start Game Modal Elements
 const startStep1 = document.getElementById('start-step-1');
 const startStep2 = document.getElementById('start-step-2');
-const startStep3 = document.getElementById('start-step-3');
 const roomNameInput = document.getElementById('room-name-input');
 const nextStep1Button = document.getElementById('next-step-1-button');
-const secondPersonNameInput = document.getElementById('second-person-name-input');
-const secondPersonPasswordInput = document.getElementById('second-person-password-input');
-const nextStep2Button = document.getElementById('next-step-2-button');
 const moneySwitch = document.getElementById('money-switch');
 const rulesListEditor = document.getElementById('rules-list-editor');
 const addRuleButton = document.getElementById('add-rule-button');
 const createRoomFinalizeButton = document.getElementById('create-room-finalize-button');
+
+// Join Game Modal Inputs
 const joinRoomNameInput = document.getElementById('join-room-name-input');
-const claimStep1 = document.getElementById('claim-step-1');
-const claimStep2 = document.getElementById('claim-step-2');
-const claimPassPrompt = document.getElementById('claim-pass-prompt');
-const claimPasswordInput = document.getElementById('claim-password-input');
-const claimSubmitPasswordButton = document.getElementById('claim-submit-password-button');
+
+// Claim Modal Elements
+const claimView = document.getElementById('claim-view');
 const circlesContainer = document.getElementById('circles-container');
+const claimWinnerPrompt = document.getElementById('claim-winner-prompt');
 const approveClaimButton = document.getElementById('approve-claim-button');
 const bogeyClaimButton = document.getElementById('bogey-claim-button');
-const hideCirclesButton = document.getElementById('hide-circles-button');
 
 // --- Game State ---
 let currentRoom = null;
@@ -248,10 +246,7 @@ function resetGame() {
 startGameButton.addEventListener('click', () => {
     startStep1.classList.remove('hidden');
     startStep2.classList.add('hidden');
-    startStep3.classList.add('hidden');
     roomNameInput.value = '';
-    secondPersonNameInput.value = '';
-    secondPersonPasswordInput.value = '';
     rulesListEditor.innerHTML = '';
     moneySwitch.checked = false;
     addRuleEditor();
