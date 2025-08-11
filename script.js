@@ -318,12 +318,25 @@ function joinRoom() {
 
 function showCircles() {
     circlesContainer.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
-        const circle = document.createElement('div');
-        circle.classList.add('circle');
-        circle.style.animationDelay = `${i * 0.2}s`;
-        circlesContainer.appendChild(circle);
+    
+    // Create verification board with 90 numbers in 10x9 grid
+    const verificationBoard = document.createElement('div');
+    verificationBoard.classList.add('verification-board');
+    
+    for (let i = 1; i <= 90; i++) {
+        const numberCell = document.createElement('div');
+        numberCell.classList.add('verification-number-cell');
+        numberCell.textContent = i;
+        
+        // Highlight called numbers
+        if (calledNumbers.includes(i)) {
+            numberCell.classList.add('verification-called');
+        }
+        
+        verificationBoard.appendChild(numberCell);
     }
+    
+    circlesContainer.appendChild(verificationBoard);
 }
 
 function callNumber() {
