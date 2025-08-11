@@ -18,9 +18,7 @@ This game uses a **separated architecture**:
 - **Role-based permissions**: Only room creators can call numbers and approve claims
 - **Cloud deployment ready**: Frontend on GitHub Pages, Backend on Render
 
-## Quick Start
-
-### Local Development
+## Local Development
 
 1. **Install dependencies:**
    ```bash
