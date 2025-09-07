@@ -203,7 +203,7 @@ function renderRules(roomData = null) {
             ruleText += ` (Claimed by ${rule.claimedBy.join(', ')})`;
         }
         ruleDiv.textContent = ruleText;
-        if (!rule.claimedBy) {
+        if (!rule.claimedBy || rule.claimedBy.length === 0) {
             const claimButton = document.createElement('button');
             claimButton.textContent = 'Claim';
             claimButton.classList.add('claim-button');
