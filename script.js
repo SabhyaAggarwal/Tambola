@@ -77,6 +77,12 @@ if (typeof io !== 'undefined') {
                 calledNumbers = data.calledNumbers;
                 updateBoard();
                 calledNumberDisplay.textContent = data.number;
+
+                if (calledNumbers.length > 0 && calledNumbers.length % 10 === 0) {
+                    showCircles();
+                } else if (calledNumbers.length % 10 === 1) {
+                    hideCircles();
+                }
             });
             
             socket.on('game-reset', (roomData) => {
@@ -165,12 +171,15 @@ function handleClaimClick(event) {
     }
 
     // Creator's simplified flow
-    claimingPlayerName = null; // Clear any previous claiming player name
-    claimWinnerPrompt.textContent = `Verify claim for: ${ruleToClaim}`;
-    approveClaimButton.disabled = false;
-    bogeyClaimButton.disabled = false;
-    showCircles();
-    claimModal.classList.remove('hidden');
+    const winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
+    if (winnerName && winnerName.trim()) {
+        claimingPlayerName = winnerName.trim();
+        claimWinnerPrompt.textContent = `Verify claim for: ${ruleToClaim}`;
+        approveClaimButton.disabled = false;
+        bogeyClaimButton.disabled = false;
+        showCircles();
+        claimModal.classList.remove('hidden');
+    }
 }
 
 function renderRules(roomData = null) {
@@ -189,9 +198,9 @@ function renderRules(roomData = null) {
         if (moneyEnabled) {
             ruleText += ` - $${rule.price}`;
         }
-        if (rule.claimedBy) {
+        if (rule.claimedBy && rule.claimedBy.length > 0) {
             ruleDiv.classList.add('claimed');
-            ruleText += ` (Claimed by ${rule.claimedBy})`;
+            ruleText += ` (Claimed by ${rule.claimedBy.join(', ')})`;
         }
         ruleDiv.textContent = ruleText;
         if (!rule.claimedBy) {
@@ -389,6 +398,12 @@ function showCircles() {
     }
     
     circlesContainer.appendChild(verificationBoard);
+    circlesContainer.classList.remove('hidden');
+}
+
+function hideCircles() {
+    circlesContainer.innerHTML = '';
+    circlesContainer.classList.add('hidden');
 }
 
 function callNumber() {
@@ -475,14 +490,7 @@ verifyButton.style.display = 'none';
 
 
 approveClaimButton.addEventListener('click', () => {
-    // Use the stored claiming player name or prompt if not available
-    let winnerName = claimingPlayerName;
-    if (!winnerName) {
-        winnerName = prompt(`Approving claim for "${ruleToClaim}".\nEnter the winner's name:`);
-    } else {
-        // Show confirmation with the auto-populated name
-        winnerName = prompt(`Approving claim for "${ruleToClaim}".\nWinner's name:`, claimingPlayerName);
-    }
+    const winnerName = claimingPlayerName;
     if (winnerName && winnerName.trim()) {
         fetch(`${API_BASE_URL}/api/rooms/${currentRoom}/claim`, {
             method: 'PUT',
