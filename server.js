@@ -102,7 +102,7 @@ app.post('/api/rooms', (req, res) => {
         roomName,
         isCreator: true,
         moneyEnabled: moneyEnabled || false,
-        rules: rules || [],
+        rules: rules.map(rule => ({ ...rule, claimedBy: [] })) || [],
         calledNumbers: [],
         createdAt: new Date().toISOString()
     };
@@ -163,7 +163,7 @@ app.put('/api/rooms/:roomName/reset', (req, res) => {
     room.calledNumbers = [];
     // Reset rule claims
     room.rules.forEach(rule => {
-        rule.claimedBy = null;
+        rule.claimedBy = [];
     });
     
     rooms.set(roomName, room);
@@ -190,7 +190,10 @@ app.put('/api/rooms/:roomName/claim', (req, res) => {
     }
     
     if (approved && winnerName) {
-        rule.claimedBy = winnerName;
+        if (!rule.claimedBy) {
+            rule.claimedBy = [];
+        }
+        rule.claimedBy.push(winnerName);
         rooms.set(roomName, room);
         
         // Broadcast rule claim to all clients
