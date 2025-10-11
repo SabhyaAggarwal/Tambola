@@ -79,6 +79,9 @@ if (typeof io !== 'undefined') {
                 calledNumberDisplay.textContent = data.number;
 
                 if (calledNumbers.length > 0 && calledNumbers.length % 10 === 0) {
+                    showPeriodicCircles();
+                } else {
+                    hidePeriodicCircles();
                     showCircles();
                 } else if (calledNumbers.length % 10 === 1) {
                     hideCircles();
@@ -203,7 +206,7 @@ function renderRules(roomData = null) {
             ruleText += ` (Claimed by ${rule.claimedBy.join(', ')})`;
         }
         ruleDiv.textContent = ruleText;
-        if (!rule.claimedBy) {
+        if (!rule.claimedBy || rule.claimedBy.length === 0) {
             const claimButton = document.createElement('button');
             claimButton.textContent = 'Claim';
             claimButton.classList.add('claim-button');
@@ -521,6 +524,56 @@ bogeyClaimButton.addEventListener('click', () => {
     alert(`Claim for "${ruleToClaim}" has been rejected.`);
     claimModal.classList.add('hidden');
 });
+
+// --- New Periodic Circle Display ---
+let periodicCirclesOverlay = null;
+
+function createPeriodicCirclesOverlay() {
+    if (document.getElementById('periodic-circles-overlay')) return;
+
+    periodicCirclesOverlay = document.createElement('div');
+    periodicCirclesOverlay.id = 'periodic-circles-overlay';
+    periodicCirclesOverlay.classList.add('hidden');
+    document.body.appendChild(periodicCirclesOverlay);
+
+    // Close the overlay when it's clicked
+    periodicCirclesOverlay.addEventListener('click', () => {
+        hidePeriodicCircles();
+    });
+}
+
+function showPeriodicCircles() {
+    if (!periodicCirclesOverlay) return;
+
+    // Re-use the verification board generation
+    const verificationBoard = document.createElement('div');
+    verificationBoard.classList.add('verification-board');
+
+    for (let i = 1; i <= 90; i++) {
+        const numberCell = document.createElement('div');
+        numberCell.classList.add('verification-number-cell');
+        numberCell.textContent = i;
+
+        if (calledNumbers.includes(i)) {
+            numberCell.classList.add('verification-called');
+        }
+
+        verificationBoard.appendChild(numberCell);
+    }
+
+    periodicCirclesOverlay.innerHTML = ''; // Clear previous content
+    periodicCirclesOverlay.appendChild(verificationBoard);
+    periodicCirclesOverlay.classList.remove('hidden');
+}
+
+function hidePeriodicCircles() {
+    if (!periodicCirclesOverlay) return;
+    periodicCirclesOverlay.classList.add('hidden');
+}
+
+// Create the overlay once the DOM is loaded
+document.addEventListener('DOMContentLoaded', createPeriodicCirclesOverlay);
+
 
 // --- Initial Setup ---
 for (let i = 1; i <= 90; i++) {
