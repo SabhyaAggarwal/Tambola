@@ -82,6 +82,9 @@ if (typeof io !== 'undefined') {
                     showPeriodicCircles();
                 } else {
                     hidePeriodicCircles();
+                    showCircles();
+                } else if (calledNumbers.length % 10 === 1) {
+                    hideCircles();
                 }
             });
             
