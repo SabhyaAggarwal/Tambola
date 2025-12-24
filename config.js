@@ -16,7 +16,7 @@ const config = {
         ) {
             // Replace with your actual Render backend URL
             // Example: 'https://your-tambola-backend.onrender.com'
-            return 'https://tambola-backend-d9l4.onrender.com';
+            return 'https://tambola-jet.vercel.app';
         }
         // If running locally
         else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
